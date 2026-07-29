@@ -58,36 +58,46 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top">
-        <div className="hero-copy">
-          <div className="eyebrow"><span>●</span> В рамках «ИИ недели»</div>
-          <h1>Узнайте свой<br /><em>ИИ Индекс</em></h1>
-          <p className="lead">За 10 минут оцените, насколько уверенно вы используете искусственный интеллект в работе и жизни.</p>
-          <div className="hero-actions">
-            <button className="button" onClick={() => scrollToForm()}>Пройти ИИ Чекап <Arrow /></button>
-            <span className="free-note"><b>Бесплатно</b><small>Подготовка не нужна</small></span>
+        <div className="hero-main">
+          <div className="hero-copy">
+            <div className="eyebrow"><span>●</span> В рамках «ИИ недели»</div>
+            <h1>ИИ<br /><em>Чекап</em></h1>
+            <p className="hero-subtitle">Узнайте, насколько вы готовы к работе и жизни в эпоху искусственного интеллекта</p>
+            <p className="hero-text">Пройдите диагностику для себя или своей организации. Тест занимает в среднем 10 минут. Вы увидите свои сильные стороны и получите базовые рекомендации по развитию.</p>
+            <button className="button hero-cta" onClick={() => scrollToForm()}>
+              Записаться на ИИ Чекап <Arrow />
+            </button>
           </div>
-          <div className="organizer">
-            <span>Организатор</span>
-            <b>ЦИФРИУМ</b>
+
+          <div className="hero-choices">
+            <article className="hero-choice hero-choice-personal">
+              <div className="hero-choice-top"><span>01 — ДЛЯ СЕБЯ</span><i>↗</i></div>
+              <h2>Персональный<br />ИИ Чекап</h2>
+              <p>Оцените, каких знаний вам не хватает, и получите рекомендации, как увереннее использовать ИИ в работе и жизни.</p>
+              <button onClick={() => scrollToForm("personal")}>Хочу пройти <Arrow /></button>
+            </article>
+            <article className="hero-choice hero-choice-corporate">
+              <div className="hero-choice-top"><span>02 — ДЛЯ ОРГАНИЗАЦИИ</span><i>↗</i></div>
+              <h2>Корпоративный<br />ИИ Чекап</h2>
+              <p>Узнайте, как ИИ может повысить эффективность организации, усилить команду и помочь быстрее конкурентов внедрять новые подходы.</p>
+              <button onClick={() => scrollToForm("corporate")}>Хочу пройти <Arrow /></button>
+            </article>
+            <p className="hero-disclaimer">Это не экзамен и не проверка знания сервисов. ИИ Чекап поможет определить, куда двигаться дальше, чтобы увереннее использовать ИИ в современном мире.</p>
           </div>
         </div>
 
-        <div className="hero-panel">
-          <div className="orbit orbit-one" />
-          <div className="orbit orbit-two" />
-          <div className="score">
-            <span>Ваш ИИ Индекс</span>
-            <strong>?</strong>
-            <small>Узнайте после чекапа</small>
-          </div>
-          <div className="floating-card card-a"><span>01</span><b>Знания</b><i>?</i></div>
-          <div className="floating-card card-b"><span>02</span><b>Практика</b><i>?</i></div>
-          <div className="floating-card card-c"><span>03</span><b>Безопасность</b><i>?</i></div>
+        <div className="hero-benefits" aria-label="Преимущества ИИ Чекапа">
+          <div className="hero-free"><strong>Бесплатно</strong><span>для всех участников</span></div>
+          <div><strong>10 минут</strong><span>занимает тест</span></div>
+          <div><strong>Без подготовки</strong><span>можно начать сразу</span></div>
+          <div><strong>Проверен</strong><span>экспертами рынка</span></div>
+          <div><strong>Сразу</strong><span>доступны результаты</span></div>
         </div>
       </section>
 
       <section className="partners" aria-label="Партнеры проекта">
-        <span>При поддержке</span>
+        <div className="partner-organizer"><small>Организатор</small><strong>ЦИФРИУМ</strong></div>
+        <span>Партнеры</span>
         {[1,2,3,4,5].map((n) => <div className="logo-placeholder" key={n}>ПАРТНЕР {n}</div>)}
       </section>
 
