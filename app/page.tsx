@@ -60,10 +60,10 @@ export default function Home() {
       <section className="hero" id="top">
         <div className="hero-main">
           <div className="hero-copy">
-            <div className="eyebrow"><span>●</span> В рамках «ИИ недели»</div>
+            <div className="eyebrow"><span>●</span> Тестирование проходит в рамках ИИ недели</div>
             <h1>ИИ<br /><em>Чекап</em></h1>
             <p className="hero-subtitle">Узнайте, насколько вы готовы к работе и жизни в эпоху искусственного интеллекта</p>
-            <p className="hero-text">Пройдите диагностику для себя или своей организации. Тест занимает в среднем 10 минут. Вы увидите свои сильные стороны и получите базовые рекомендации по развитию.</p>
+            <p className="hero-text">Пройдите диагностику для себя или своей организации. Тест занимает в среднем за 10 минут. Вы увидите свои сильные стороны и получите базовые рекомендации по развитию.</p>
             <button className="button hero-cta" onClick={() => scrollToForm()}>
               Записаться на ИИ Чекап <Arrow />
             </button>
@@ -88,10 +88,9 @@ export default function Home() {
 
         <div className="hero-benefits" aria-label="Преимущества ИИ Чекапа">
           <div className="hero-free"><strong>Бесплатно</strong><span>для всех участников</span></div>
-          <div><strong>10 минут</strong><span>занимает тест</span></div>
-          <div><strong>Без подготовки</strong><span>можно начать сразу</span></div>
-          <div><strong>Проверен</strong><span>экспертами рынка</span></div>
-          <div><strong>Сразу</strong><span>доступны результаты</span></div>
+          <div><strong>10 минут</strong><span>занимает прохождение теста</span></div>
+          <div><strong>Без подготовки</strong><span>Можно начать сразу</span></div>
+          <div><strong>Результат сразу</strong><span>Ваш ИИ индекс в конце теста</span></div>
         </div>
       </section>
 

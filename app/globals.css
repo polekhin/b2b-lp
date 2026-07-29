@@ -49,7 +49,7 @@ h1 em { display: inline-block; transform: translateX(3vw); }
 .hero-choice > p { font-size: 14px; line-height: 1.5; margin: 0; }
 .hero-choice > button { border: 0; border-top: 1px solid currentColor; background: transparent; color: inherit; margin-top: auto; padding: 20px 0 0; display: flex; align-items: center; justify-content: space-between; font-weight: 700; }
 .hero-disclaimer { grid-column: 1 / -1; margin: 3px 0 0; padding: 17px 20px; border: 1px solid var(--line); font-size: 13px; line-height: 1.45; color: #575163; }
-.hero-benefits { margin-top: 44px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1.15fr repeat(4,1fr); }
+.hero-benefits { margin-top: 44px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1.15fr repeat(3,1fr); }
 .hero-benefits > div { min-height: 102px; padding: 19px 18px 15px 0; border-right: 1px solid var(--line); display: flex; flex-direction: column; justify-content: space-between; }
 .hero-benefits strong { font-size: 18px; letter-spacing: -.03em; }
 .hero-benefits span { font-size: 11px; color: #6e6877; }
