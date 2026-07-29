@@ -74,6 +74,26 @@ h2 { font-size: clamp(42px, 5.5vw, 82px); line-height: .96; letter-spacing: -.06
 .metric { min-height: 150px; border-right: 1px solid var(--line); padding: 26px 22px 10px 0; display: flex; flex-direction: column; justify-content: space-between; }
 .metric strong { font-size: clamp(35px,4vw,64px); letter-spacing: -.06em; }.metric span { max-width: 160px; font-size: 13px; }
 
+.intro-title { max-width: 1080px; }
+.intro-audiences { margin: 70px 0 0 22%; display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); }
+.intro-audiences article { min-height: 250px; padding: 25px 35px 28px 0; border-right: 1px solid var(--line); display: flex; flex-direction: column; justify-content: space-between; }
+.intro-audiences article + article { padding-left: 35px; }
+.intro-audiences article > span { color: var(--purple); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.intro-audiences article p { margin: 0; font-size: clamp(19px, 2vw, 27px); line-height: 1.24; letter-spacing: -.035em; }
+.intro-method { grid-column: 1 / -1; margin: 0; padding: 22px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 14px; line-height: 1.5; color: #625c6c; }
+.no-fail { margin-top: 62px; background: var(--lime); display: grid; grid-template-columns: .65fr 1.35fr; gap: 6vw; align-items: center; padding: 28px 34px; max-width: 900px; }
+.no-fail strong { font-size: 28px; line-height: 1; letter-spacing: -.04em; }
+.no-fail p { margin: 0; font-size: 15px; line-height: 1.5; }
+.intro-benefits { margin-top: 64px; display: grid; grid-template-columns: repeat(3,1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.intro-benefits article { min-height: 300px; padding: 25px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); display: flex; flex-direction: column; }
+.intro-benefits article > span { color: var(--purple); font-size: 11px; font-weight: 800; }
+.intro-benefits h3 { font-size: clamp(27px,2.4vw,37px); line-height: 1; letter-spacing: -.045em; margin: auto 0 18px; max-width: 330px; }
+.intro-benefits p { margin: 0; font-size: 14px; line-height: 1.5; max-width: 340px; }
+.intro-action { margin-top: 30px; display: flex; align-items: center; gap: 24px; }
+.intro-action > div { padding-left: 24px; border-left: 1px solid var(--line); display: flex; flex-direction: column; }
+.intro-action > div span { color: var(--purple); font-weight: 800; font-size: 18px; }
+.intro-action > div small { font-size: 11px; }
+
 .audience { background: var(--white); }
 .section-heading { display: grid; grid-template-columns: .65fr 1.4fr .8fr; gap: 4vw; align-items: end; margin-bottom: 62px; }
 .section-heading .section-number { margin: 0; align-self: start; }
@@ -164,6 +184,7 @@ footer p { color: #aaa4ba; max-width: 300px; line-height: 1.5; } footer > div { 
   .partners > * { min-height: 70px; border-bottom: 1px solid var(--line); }
   .partners > span { justify-content: center; }
   .intro-grid, .business-grid, .project-grid, .register { grid-template-columns: 1fr; }
+  .intro-audiences { margin-left: 0; }
   .section-heading { grid-template-columns: 1fr; align-items: start; }
   .audience-grid { grid-template-columns: repeat(2,1fr); }
   .format-card { min-height: 620px; }
@@ -190,6 +211,16 @@ footer p { color: #aaa4ba; max-width: 300px; line-height: 1.5; } footer > div { 
   .partners { grid-template-columns: repeat(2,1fr); }
   .section { padding: 80px 20px; }.section-number { margin-bottom: 35px; }
   h2 { font-size: 46px; }
+  .intro-audiences { margin-top: 50px; grid-template-columns: 1fr; }
+  .intro-audiences article { min-height: 220px; padding: 24px 0; border-right: 0; }
+  .intro-audiences article + article { padding-left: 0; border-top: 1px solid var(--line); }
+  .intro-method { grid-column: auto; }
+  .no-fail { grid-template-columns: 1fr; gap: 20px; padding: 25px; }
+  .intro-benefits { grid-template-columns: 1fr; }
+  .intro-benefits article { min-height: 250px; }
+  .intro-action { align-items: stretch; flex-direction: column; }
+  .intro-action .button { width: 100%; justify-content: space-between; }
+  .intro-action > div { padding: 15px 0 0; border-left: 0; border-top: 1px solid var(--line); }
   .benefit-row { grid-template-columns: 1fr 1fr; margin-top: 60px; }.metric { min-height: 120px; border-bottom: 1px solid var(--line); }
   .audience-grid { grid-template-columns: 1fr; }.audience-card { min-height: 220px; }
   .format-grid { grid-template-columns: 1fr; }.format-card { padding: 25px; min-height: 600px; }.format-card h3 { font-size: 50px; }
