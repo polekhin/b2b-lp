@@ -1,0 +1,12 @@
+.single-preview{grid-template-columns:1.25fr .75fr!important;transform:none!important}
+.single-preview .index-card{transform:none;min-height:430px}
+.test-count{background:var(--ink);color:#fff;padding:22px;display:flex;flex-direction:column;justify-content:flex-end}
+.test-count strong{font-size:76px;letter-spacing:-.08em}
+.test-count span{padding-top:15px;border-top:1px solid #555064;font-size:12px;line-height:1.45}
+.scores.single-score{grid-template-columns:1fr}
+.single-score .score{min-height:480px}
+.single-score .score h3{font-size:clamp(48px,6vw,82px)}
+.matrix article.active{background:var(--ink);color:#fff}
+.matrix article.active p{color:#d0ccd8}
+.matrix article.active b:after{content:" · ВАШ РЕЗУЛЬТАТ";color:var(--lime);font-size:9px;letter-spacing:.12em;margin-left:8px}
+@media(max-width:560px){.single-preview{grid-template-columns:1fr 1fr!important}.test-count strong{font-size:58px}}

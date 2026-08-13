@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./unified.css";
 
 export const metadata: Metadata = {
-  title: "ИИ Чекап — узнайте свой ИИ Индекс",
-  description: "Бесплатная онлайн-диагностика ИИ-грамотности для человека и организации. Результат за 10 минут.",
+  title: "Корпоративный ИИ Чекап — внутренняя диагностика",
+  description: "Единая интерактивная диагностика ИИ-зрелости. 40 заданий и один общий ИИ Индекс.",
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
 };
 
