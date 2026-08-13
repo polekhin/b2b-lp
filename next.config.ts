@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
   ...(isGitHubPages
     ? {
         output: "export" as const,
-        basePath: "/lp-aicheck-v1",
-        assetPrefix: "/lp-aicheck-v1/",
+        basePath: "/ai-test",
+        assetPrefix: "/ai-test/",
         trailingSlash: true,
         images: { unoptimized: true },
       }
