@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import "./unified.css";
+import "./assessment.css";
 
 export const metadata: Metadata = {
-  title: "Корпоративный ИИ Чекап — внутренняя диагностика",
-  description: "Единая интерактивная диагностика ИИ-зрелости. 40 заданий и один общий ИИ Индекс.",
+  title: "Корпоративные программы по ИИ — ЦДПО",
+  description: "Шесть практических программ развития AI-компетенций для сотрудников, руководителей и функциональных команд.",
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
 };
 

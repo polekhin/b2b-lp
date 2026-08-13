@@ -1,120 +1,195 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
 
-type Option = { label: string; score?: number; correct?: boolean };
-type Question = {
-  id: number; block: number; title: string; type: "single"|"scale"|"multi"|"order"|"match"|"matrix"|"chart";
-  options?: Option[]; limit?: number; items?: string[]; correctOrder?: string[]; pairs?: {left:string; right:string}[];
+type Expert = { name: string; initials: string; role: string };
+type Bundle = {
+  id: string;
+  index: string;
+  name: string;
+  subtitle: string;
+  audience: string;
+  task: string;
+  result: string;
+  accent: string;
+  modules: string[];
+  experts: Expert[];
 };
 
-const blocks: Record<number,{title:string; intro:string}> = {
-  1:{title:"Стратегия внедрения ИИ",intro:"Определим, насколько стратегия внедрения ИИ заметна в вашей ежедневной работе. Важны не формальные документы, а то, что вы лично видите и понимаете."},
-  2:{title:"Сотрудники и корпоративная культура",intro:"Оценим ваш реальный опыт доступа к ИИ, обучения и поддержки инициатив. Этот блок показывает, помогает ли среда сотрудникам осваивать новые практики."},
-  3:{title:"Бизнес-процессы",intro:"Посмотрим, где ИИ встречается вам в рабочих процессах и что происходит с успешными пилотами. Устойчивое внедрение начинается там, где эксперимент становится частью обычной работы."},
-  4:{title:"Технологии и инструменты",intro:"Оценим, насколько легко вам пользоваться разрешёнными ИИ-сервисами и получать помощь. Доступная и управляемая среда — основа безопасного масштабирования."},
-  5:{title:"Данные, безопасность и управление",intro:"Проверим, понятны ли вам правила работы с данными и рисками ИИ. Зрелая практика должна быть не только полезной, но и предсказуемой и безопасной."},
-  6:{title:"Результаты и эффект",intro:"Разберёмся, видите ли вы измеримый результат применения ИИ. Рост активности важен, но ценность появляется только вместе с улучшением времени, качества или экономики процесса."},
-  7:{title:"Понимание возможностей и ограничений",intro:"Проверим базовое понимание того, как работает генеративный ИИ и где он полезен. Это помогает выбирать реалистичные задачи и не переоценивать ответы модели."},
-  8:{title:"Практическое применение",intro:"Оценим широту и системность вашего личного использования ИИ. Здесь нет «правильной» частоты — важен честный профиль текущей практики."},
-  9:{title:"Работа с запросами",intro:"Проверим, умеете ли вы давать ИИ достаточный контекст и улучшать результат итерациями. Качество запроса напрямую влияет на полезность ответа."},
-  10:{title:"Критическое мышление",intro:"Оценим, насколько уверенно вы проверяете факты, источники и причинные выводы. Правдоподобный ответ ИИ ещё не означает достоверный."},
-  11:{title:"Безопасность и ответственное использование",intro:"Проверим решения в ситуациях с чувствительными данными и цифровыми рисками. Ответственное использование защищает и человека, и организацию."},
-  12:{title:"Продуктивность",intro:"Завершим тест комплексными рабочими сценариями. Они показывают, умеете ли вы сочетать скорость ИИ с контролем качества и рисков."},
+const experts: Record<string, Expert> = {
+  vostrov: { name: "Никита Востров", initials: "НВ", role: "Наставничество и развитие экспертов" },
+  vostrikov: { name: "Никита Востриков", initials: "НВ", role: "Прикладные инструменты ИИ" },
+  prihoda: { name: "Артем Прихода", initials: "АП", role: "Вайбкодинг и цифровые решения" },
+  sidoryuk: { name: "Алексей Сидорюк", initials: "АС", role: "ИИ- и цифровая трансформация" },
+  volkova: { name: "Мария Волкова", initials: "МВ", role: "AI-маркетинг и автоматизация контента" },
+  nesterov: { name: "Илья Нестеров", initials: "ИН", role: "Генеративная графика и видео" },
 };
 
-const maturity = (labels:string[]):Option[] => labels.map((label,score)=>({label,score}));
-const q:Question[] = [
-{id:1,block:1,type:"single",title:"Какой вариант точнее всего описывает то, что вы лично наблюдаете в использовании ИИ на работе?",options:maturity(["В моей работе ИИ практически не встречается","Я вижу самостоятельные эксперименты отдельных коллег","Я сталкиваюсь с отдельными пилотными проектами","Я вижу ИИ в нескольких устойчивых рабочих процессах","В моей рабочей среде ИИ системно внедряется и масштабируется"])},
-{id:2,block:1,type:"scale",title:"Насколько вам понятно, зачем в вашей рабочей среде внедряют ИИ?",options:maturity(["Цели мне неизвестны","Слышал(а) только общие заявления","Знаю отдельные проекты и задачи","Понимаю основные направления и результаты","Понимаю связь ИИ со стратегическими целями"])},
-{id:3,block:1,type:"order",title:"Расположите этапы развития ИИ от менее зрелого к более зрелому",items:["Рабочий сервис","Масштабирование","Эксперимент","Пилот"],correctOrder:["Эксперимент","Пилот","Рабочий сервис","Масштабирование"]},
-{id:4,block:2,type:"single",title:"Как вы обычно получаете доступ к ИИ-сервисам для рабочих задач?",options:maturity(["Официальных инструментов для меня нет","Самостоятельно выбираю публичные сервисы","Доступ есть только у отдельных групп","Мне доступен утверждённый корпоративный сервис","Нужные ИИ-инструменты встроены в мою рабочую среду"])},
-{id:5,block:2,type:"scale",title:"Какой формат обучения работе с ИИ доступен вам на практике?",options:maturity(["Обучения нет","Учусь только самостоятельно","Доступны отдельные вебинары или курсы","Есть обучение для разных групп сотрудников","Есть постоянная ролевая система развития компетенций"])},
-{id:6,block:2,type:"single",title:"Если вы находите полезный сценарий применения ИИ, что происходит дальше?",options:maturity(["Не знаю, куда с ним обратиться","Продолжаю использовать его самостоятельно","Могу рассказать руководителю","Могу передать идею через понятный процесс","Идею оценивают, пилотируют и при успехе масштабируют"])},
-{id:7,block:3,type:"multi",limit:8,title:"В каких задачах вы лично видели реальное использование ИИ в своей организации?",options:["Документы и тексты","Поиск информации","Аналитика","Клиентская поддержка","Программирование","Работа с данными","Автоматизация процессов","HR","Нигде"].map(label=>({label}))},
-{id:8,block:3,type:"scale",title:"Насколько глубоко ИИ встроен в процессы, с которыми вы работаете или регулярно сталкиваетесь?",options:maturity(["Не используется","Это отдельный внешний инструмент","Регулярно используется вручную","Встроен в отдельные системы или процессы","Является частью сквозных процессов и меняет способ работы"])},
-{id:9,block:3,type:"match",title:"Сопоставьте наблюдаемую ситуацию со стадией внедрения",pairs:[{left:"Несколько сотрудников самостоятельно пробуют ИИ",right:"Эксперимент"},{left:"Отдел тестирует корпоративного помощника",right:"Пилот"},{left:"ИИ встроен в утверждённый процесс",right:"Рабочее применение"},{left:"Решение работает в нескольких подразделениях",right:"Масштабирование"}]},
-{id:10,block:3,type:"single",title:"Что вы обычно наблюдаете после успешного пилота ИИ?",options:maturity(["Пилот заканчивается","Решение остаётся у команды","Иногда распространяется неформально","Запускается промышленное внедрение","Работает системное масштабирование, сопровождение и повторная оценка"])},
-{id:11,block:4,type:"scale",title:"Насколько легко лично вам начать пользоваться разрешённым ИИ-сервисом?",options:maturity(["Такой возможности нет","Нужен сложный индивидуальный запрос","Доступ открыт отдельным группам","Есть понятный и быстрый порядок доступа","Сервисы уже встроены в рабочую среду"])},
-{id:12,block:4,type:"single",title:"Какая схема больше похожа на набор ИИ-инструментов, который вы видите в работе?",options:maturity(["ИИ почти отсутствует","Множество несвязанных публичных сервисов","Отдельные корпоративные решения","Утверждённый набор взаимосвязанных решений","Управляемая экосистема, интегрированная с корпоративными системами"])},
-{id:13,block:4,type:"single",title:"Куда вы можете обратиться за помощью при работе с ИИ?",options:maturity(["Поддержки нет","Только к коллегам","Есть инструкции или база знаний","Есть выделенная поддержка или эксперты","Есть база знаний, эксперты и механизм обратной связи"])},
-{id:14,block:5,type:"scale",title:"Насколько вам понятны правила передачи рабочих данных в ИИ-сервисы?",options:maturity(["Правил нет или я их не знаю","Знаю неформальные ограничения","Есть общие рекомендации","Есть формальные правила и разрешённые сервисы","Правила встроены в процессы, контролируются и обновляются"])},
-{id:15,block:5,type:"single",title:"Вам нужно проанализировать конфиденциальный рабочий документ. Как вы поступите?",options:maturity(["Загружу в привычный публичный сервис","Загружу только часть","Удалю очевидные персональные сведения","Уточню правила и обезличу материал","Использую только разрешённую среду по правилам либо не передам документ ИИ"])},
-{id:16,block:5,type:"match",title:"Сопоставьте риск и способ его снижения",pairs:[{left:"Утечка данных",right:"Контроль доступа и правила данных"},{left:"Недостоверный ответ",right:"Проверка результата"},{left:"Смещение",right:"Оценка качества и смещений"},{left:"Неконтролируемое использование",right:"Правила и управление"}]},
-{id:17,block:5,type:"single",title:"Какой уровень управления ИИ вы лично наблюдаете в своей рабочей среде?",options:maturity(["Управления не видно","Решения принимаются ситуативно","Есть отдельные ответственные","Есть роли, правила и процедуры","Есть системное управление, мониторинг рисков и улучшение"])},
-{id:18,block:6,type:"scale",title:"Какие способы оценки эффекта ИИ вам встречаются в работе?",options:maturity(["Эффект не оценивается","Собираются отзывы сотрудников","Считается активность использования","Есть KPI отдельных решений","Системно измеряются время, качество, ошибки и экономический эффект"])},
-{id:19,block:6,type:"multi",limit:3,title:"Выберите 3 показателя, которые лучше всего показывают реальный эффект",options:[{label:"Сокращение времени процесса",correct:true},{label:"Изменение качества или числа ошибок",correct:true},{label:"Экономический или операционный эффект",correct:true},{label:"Количество лицензий"},{label:"Количество запросов"},{label:"Количество презентаций об ИИ"}]},
-{id:20,block:6,type:"chart",title:"Число запросов к ИИ выросло на 120%, но время процесса и число ошибок не изменились. Какой вывод наиболее обоснован?",options:maturity(["Внедрение успешно","ИИ точно повысил производительность","Использование выросло, но данных об эффекте недостаточно","Нужно исследовать причины отсутствия эффекта","Рост использования не доказывает ценность — нужны результативные KPI"])},
-{id:21,block:7,type:"single",title:"Что наиболее точно описывает генеративный ИИ?",options:[{label:"Система, создающая новый контент на основе закономерностей в данных",score:4},{label:"Система обработки информации",score:2},{label:"Усовершенствованный поисковик",score:1},{label:"База заранее подготовленных правильных ответов",score:0}]},
-{id:22,block:7,type:"multi",title:"Какие утверждения об ИИ верны?",options:[{label:"ИИ может ошибаться",correct:true},{label:"Правдоподобный ответ может быть неверным",correct:true},{label:"ИИ всегда знает источник"},{label:"Результат зависит от контекста и запроса",correct:true},{label:"ИИ автоматически объективен"}]},
-{id:23,block:7,type:"match",title:"Сопоставьте задачу с подходящим применением ИИ",pairs:[{left:"Длинный документ",right:"Суммаризация"},{left:"Черновик письма",right:"Генерация"},{left:"1000 обращений",right:"Классификация"},{left:"Таблица документов",right:"Извлечение данных"}]},
-{id:24,block:8,type:"scale",title:"Как часто вы применяете ИИ в работе?",options:maturity(["Никогда","Несколько раз в год","Несколько раз в месяц","Несколько раз в неделю","Ежедневно в нескольких типах задач"])},
-{id:25,block:8,type:"matrix",title:"Как часто вы используете ИИ для этих задач?",items:["Тексты","Поиск","Аналитика","Документы","Идеи","Автоматизация"]},
-{id:26,block:8,type:"single",title:"Как вы поступаете, когда ИИ не подходит для задачи?",options:maturity(["Всё равно пытаюсь решить её через ИИ","Многократно переформулирую запрос","Пробую другой ИИ","Оцениваю ограничения и выбираю другой инструмент","Заранее выбираю между ИИ, обычными инструментами и ручной работой по задаче и риску"])},
-{id:27,block:9,type:"single",title:"Какой запрос наиболее качественный?",options:[{label:"Напиши текст",score:0},{label:"Напиши деловой текст о проекте",score:1},{label:"Подготовь письмо руководителю о задержке проекта, кратко и нейтрально",score:3},{label:"Подготовь письмо руководителю: цель — согласовать перенос; контекст и данные ниже; до 120 слов; нейтральный тон; в конце — решение и следующий шаг",score:4}]},
-{id:28,block:9,type:"multi",title:"Соберите полный запрос из смысловых блоков",options:["Роль и контекст","Задача","Исходные данные","Ограничения","Критерии качества","Формат результата"].map(label=>({label,correct:true}))},
-{id:29,block:9,type:"order",title:"Первый ответ ИИ слишком общий. Расставьте следующие действия",items:["Запросить новую версию","Добавить ограничения","Проверить результат","Проанализировать ответ","Уточнить задачу и контекст"],correctOrder:["Проанализировать ответ","Уточнить задачу и контекст","Добавить ограничения","Запросить новую версию","Проверить результат"]},
-{id:30,block:9,type:"multi",limit:3,title:"Выберите 3 приёма, которые обычно повышают качество результата",options:[{label:"Добавить контекст",correct:true},{label:"Задать понятные критерии",correct:true},{label:"Дать пример желаемого результата",correct:true},{label:"Написать запрос заглавными буквами"},{label:"Сделать промпт максимально длинным"},{label:"Попросить «не ошибаться»"}]},
-{id:31,block:10,type:"single",title:"ИИ уверенно привёл статистику без источника. Что делать?",options:maturity(["Использовать","Использовать, если выглядит реалистично","Спросить ИИ, уверен ли он","Попросить источник","Независимо найти и проверить первоисточник"])},
-{id:32,block:10,type:"single",title:"Какой ответ ИИ надёжнее?",options:[{label:"A — уверенный, красиво написанный, без доказательств",score:0},{label:"B — указывает ограничения, отделяет факты от предположений и даёт проверяемые источники",score:4}]},
-{id:33,block:10,type:"multi",limit:2,title:"Какие утверждения требуют особенно тщательной проверки?",options:[{label:"Сегодняшняя ключевая ставка",correct:true},{label:"Действующая редакция закона",correct:true},{label:"Столица Франции"},{label:"Формула площади круга"},{label:"Автор известного классического произведения"}]},
-{id:34,block:10,type:"chart",title:"После внедрения ИИ команда стала выполнять 140 задач вместо 100 в день. ИИ утверждает: «производительность выросла на 40% благодаря мне». Что не так?",options:maturity(["Всё правильно","Нужно округлить","Нужно узнать только стоимость ИИ","Недостаточно данных для причинного вывода","Нужно проверить сопоставимость периодов, другие факторы, качество и причинную связь"])},
-{id:35,block:11,type:"single",title:"Что безопаснее всего передать публичному ИИ?",options:[{label:"База клиентов",score:0},{label:"Внутренний договор",score:0},{label:"Документ после неполного удаления ФИО",score:1},{label:"Публичный материал",score:4},{label:"Обезличенный и разрешённый пример",score:4}]},
-{id:36,block:11,type:"match",title:"Распределите данные по зонам",pairs:[{left:"Публичная статья",right:"Можно использовать"},{left:"ФИО клиента",right:"Проверить правила / обезличить"},{left:"Коммерческая тайна",right:"Проверить правила / обезличить"},{left:"Внутренняя презентация",right:"Проверить правила / обезличить"}]},
-{id:37,block:11,type:"match",title:"Сопоставьте риск и правильное действие",pairs:[{left:"Недостоверный ответ",right:"Проверка фактов"},{left:"Персональные данные",right:"Защита / непередача"},{left:"Смещение",right:"Анализ результата и источников смещения"},{left:"Дипфейк",right:"Проверка происхождения"}]},
-{id:38,block:12,type:"order",title:"За 30 минут нужно подготовить записку по большому документу. Расставьте действия",items:["Получить структуру и сводку","Проверить критические факты","Определить требуемый результат","Доработать итог","Проверить допустимость передачи документа","Дать ИИ задачу и контекст"],correctOrder:["Определить требуемый результат","Проверить допустимость передачи документа","Дать ИИ задачу и контекст","Получить структуру и сводку","Проверить критические факты","Доработать итог"]},
-{id:39,block:12,type:"multi",limit:3,title:"Какие задачи лучше всего делегировать ИИ в первую очередь?",options:[{label:"Рутинные",correct:true},{label:"Повторяемые",correct:true},{label:"Проверяемые и обратимые",correct:true},{label:"Высокорисковое окончательное решение без контроля"},{label:"Решение с необратимыми последствиями"}]},
-{id:40,block:12,type:"single",title:"Какой вариант точнее всего описывает вашу работу с ИИ сегодня?",options:maturity(["Не использую","Экспериментирую","Использую в отдельных задачах","Системно использую в работе","Перестраиваю процессы, измеряю эффект и помогаю другим"])},
+const bundles: Bundle[] = [
+  {
+    id: "start", index: "01", name: "AI Start", subtitle: "ИИ для каждого сотрудника", accent: "mint",
+    audience: "Все сотрудники и офисные специалисты",
+    task: "Быстро внедрить ИИ в ежедневную работу и повысить личную производительность.",
+    result: "Сотрудники уверенно применяют ИИ и экономят до 1–2 часов в день.",
+    modules: ["Мастерство промпт-инжиниринга", "ИИ для деловой переписки", "ИИ для презентаций", "ИИ-агенты для личного применения"],
+    experts: [experts.vostrikov, experts.sidoryuk],
+  },
+  {
+    id: "office", index: "02", name: "AI Office", subtitle: "Цифровой офис без рутины", accent: "violet",
+    audience: "Back-office, бухгалтерия, юристы, HR и административные службы",
+    task: "Автоматизировать рутинные операции и документооборот без разработки собственного ПО.",
+    result: "Быстрее обрабатываются документы, снижается количество ошибок и ручной работы.",
+    modules: ["ИИ для документооборота", "ИИ для обработки аудио", "ИИ для финансового анализа", "ИИ для языкового перевода", "Анализ юридических документов"],
+    experts: [experts.vostrikov],
+  },
+  {
+    id: "hr", index: "03", name: "AI HR", subtitle: "Современный HR на базе ИИ", accent: "orange",
+    audience: "HRD, HRBP, L&D и корпоративные университеты",
+    task: "Ускорить адаптацию и развитие сотрудников, сохранить знания внутри компании.",
+    result: "Современная система обучения и развития при меньшей операционной нагрузке на HR.",
+    modules: ["Наставничество 2.0", "ИИ в создании обучающих материалов", "Корпоративные чат-боты", "ИИ-агенты для HR", "Мастерство промпт-инжиниринга"],
+    experts: [experts.vostrov, experts.vostrikov, experts.sidoryuk],
+  },
+  {
+    id: "leadership", index: "04", name: "AI Leadership", subtitle: "ИИ для руководителей", accent: "blue",
+    audience: "CEO, директора и руководители подразделений",
+    task: "Повысить эффективность управления и скорость принятия решений.",
+    result: "Руководители используют ИИ как инструмент управления бизнесом и поиска точек роста.",
+    modules: ["Вайбкодинг для управленцев", "ИИ-трансформация организации", "Цифровая трансформация", "Кибербезопасность", "ИИ-агенты для руководителя"],
+    experts: [experts.prihoda, experts.sidoryuk],
+  },
+  {
+    id: "knowledge", index: "05", name: "AI Knowledge", subtitle: "Управление знаниями и развитие экспертов", accent: "yellow",
+    audience: "Производственные и инженерные компании, корпоративные университеты",
+    task: "Сохранить критически важные знания и ускорить развитие новых специалистов.",
+    result: "Система передачи экспертизы, которая не зависит от отдельных сотрудников.",
+    modules: ["Наставничество 2.0", "Создание интеллектуальных чат-ботов", "ИИ в создании обучающих материалов"],
+    experts: [experts.vostrov, experts.vostrikov],
+  },
+  {
+    id: "marketing", index: "06", name: "AI Marketing", subtitle: "Маркетинг на базе ИИ", accent: "pink",
+    audience: "Директора по маркетингу, бренд-менеджеры, контент- и SMM-команды, PR и digital-маркетологи",
+    task: "Ускорить производство маркетингового контента, повысить эффективность кампаний и автоматизировать рутинные операции.",
+    result: "Команда выстраивает сквозной AI-процесс: от идеи и текста до готовых графических, аудио- и видеоматериалов.",
+    modules: ["Мастерство промпт-инжиниринга", "ИИ для маркетинговых текстов и деловой переписки", "ИИ для презентаций и визуального контента", "ИИ в обработке аудио", "ИИ-агенты для автоматизации маркетинга", "Практикум по созданию графики и видео с помощью ИИ"],
+    experts: [experts.vostrikov, experts.volkova, experts.nesterov],
+  },
 ];
 
-type Answer = number|string[]|Record<string,string>|Record<string,number>;
-const shuffle = <T,>(a:T[]) => [...a].sort(()=>Math.random()-.5);
+const paths = [
+  ["Всем сотрудникам", "AI Start", "start"],
+  ["Офисным функциям", "AI Office", "office"],
+  ["HR и L&D", "AI HR", "hr"],
+  ["Руководителям", "AI Leadership", "leadership"],
+  ["Экспертным командам", "AI Knowledge", "knowledge"],
+  ["Маркетингу и PR", "AI Marketing", "marketing"],
+];
 
-function scoreQuestion(question:Question, answer:Answer|undefined){
-  if(answer===undefined) return 0;
-  if(question.type==="single"||question.type==="scale"||question.type==="chart") return Number(answer);
-  if(question.type==="multi"){
-    const chosen=answer as string[]; const opts=question.options||[]; const good=opts.filter(o=>o.correct).map(o=>o.label);
-    if(question.id===7){ if(chosen.includes("Нигде")) return 0; return Math.min(4, chosen.length===1?1:chosen.length<=3?2:chosen.length<=5?3:4); }
-    const hits=chosen.filter(x=>good.includes(x)).length, misses=chosen.filter(x=>!good.includes(x)).length;
-    return Math.max(0,Math.round(4*(hits/good.length)-misses));
+export default function Landing() {
+  const [selected, setSelected] = useState("");
+  const [sent, setSent] = useState(false);
+
+  function choose(name: string) {
+    setSelected(name);
+    document.getElementById("request")?.scrollIntoView({ behavior: "smooth" });
   }
-  if(question.type==="match"){ const m=answer as Record<string,string>; const ok=(question.pairs||[]).filter(p=>m[p.left]===p.right).length; return Math.round(4*ok/(question.pairs?.length||1)); }
-  if(question.type==="order"){ const a=answer as string[], c=question.correctOrder||[]; const right=a.filter((x,i)=>x===c[i]).length; return right===c.length?4:right>=c.length-2?3:right>=Math.ceil(c.length/2)?2:right?1:0; }
-  if(question.type==="matrix"){ const vals=Object.values(answer as Record<string,number>); return Math.round(vals.reduce((s,n)=>s+n,0)/(vals.length||1)); }
-  return 0;
-}
 
-function level(index:number){
-  return index<25?"Начальный уровень":index<50?"Формирующийся уровень":index<75?"Интегрированный уровень":"Лидер ИИ";
-}
-
-export default function Home(){
-  const [started,setStarted]=useState(false); const [current,setCurrent]=useState(0); const [answers,setAnswers]=useState<Record<number,Answer>>({}); const [done,setDone]=useState(false);
-  const question=q[current]; const answer=answers[question?.id];
-  const complete=useMemo(()=>{ if(answer===undefined)return false; if(Array.isArray(answer))return answer.length>0; if(typeof answer==="object")return Object.keys(answer).length>0; return true;},[answer]);
-  function set(a:Answer){setAnswers(v=>({...v,[question.id]:a}));}
-  function next(){ if(current===q.length-1)setDone(true); else setCurrent(v=>v+1); window.scrollTo({top:0,behavior:"smooth"}); }
-  function restart(){setStarted(false);setDone(false);setCurrent(0);setAnswers({});}
-  if(!started) return <main className="welcome"><header><div className="logo"><b>ИИ</b><span>ЧЕКАП</span></div><span className="secure">Внутренняя диагностика · данные не отправляются</span></header><section className="welcome-grid"><div><p className="eyebrow">КОРПОРАТИВНЫЙ ИИ ЧЕКАП</p><h1>Определите свой единый <em>ИИ Индекс</em></h1><p className="lead">40 связанных практических заданий помогут оценить ваш опыт работы с ИИ, понимание среды, безопасность и способность получать результат. В конце вы получите один общий индекс и уровень зрелости.</p><button className="primary" onClick={()=>setStarted(true)}>Начать тест <span>→</span></button><p className="fine">15–20 минут · 12 тематических блоков · без регистрации</p></div><aside className="single-preview"><div className="index-card lime"><span>ЕДИНЫЙ РЕЗУЛЬТАТ</span><strong>100</strong><p>Ваш общий<br/>ИИ Индекс</p></div><div className="test-count"><strong>40</strong><span>заданий в одном<br/>непрерывном тесте</span></div></aside></section><section className="welcome-meta"><div><b>01</b><span>Один непрерывный<br/>маршрут прохождения</span></div><div><b>02</b><span>Карточки, шкалы,<br/>матрицы и кейсы</span></div><div><b>03</b><span>Один итоговый<br/>ИИ Индекс</span></div></section></main>;
-  if(done){
-    const index=Math.round(q.reduce((s,x)=>s+scoreQuestion(x,answers[x.id]),0)/160*100);
-    return <main className="results"><header><div className="logo"><b>ИИ</b><span>ЧЕКАП</span></div><span>Результат диагностики</span></header><section className="result-head"><p className="eyebrow">ДИАГНОСТИКА ЗАВЕРШЕНА</p><h1>Ваш общий<br/><em>ИИ Индекс</em></h1><p>Единый результат объединяет практический опыт, понимание рабочей среды, качество взаимодействия с ИИ, критическое мышление и безопасное использование.</p></section><section className="scores single-score"><ResultCard title="Ваш ИИ Индекс" value={index} label={level(index)} color="lime"/></section><section className="matrix"><h2>Что означает ваш уровень</h2><div><article className={index<25?"active":""}><b>0–24 · Начальный</b><p>Освойте разрешённые инструменты, базовые сценарии и правила работы с данными.</p></article><article className={index>=25&&index<50?"active":""}><b>25–49 · Формирующийся</b><p>Закрепляйте регулярную практику и учитесь проверять качество результата.</p></article><article className={index>=50&&index<75?"active":""}><b>50–74 · Интегрированный</b><p>Систематизируйте сценарии, измеряйте эффект и делитесь рабочими подходами.</p></article><article className={index>=75?"active":""}><b>75–100 · Лидер ИИ</b><p>Масштабируйте лучшие практики и помогайте другим применять ИИ ответственно.</p></article></div></section><button className="secondary" onClick={restart}>Пройти ещё раз</button></main>;
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSent(true);
   }
-  const blockStart=current===0||q[current-1].block!==question.block;
-  return <main className="test"><header className="test-head"><div className="logo"><b>ИИ</b><span>ЧЕКАП</span></div><div className="part">ЕДИНЫЙ ИИ ЧЕКАП</div><div className="counter">{String(question.id).padStart(2,"0")} / 40</div></header><div className="progress"><i style={{width:`${question.id/40*100}%`}}/></div><section className="test-shell"><aside><span>БЛОК {question.block}</span><h2>{blocks[question.block].title}</h2><p>{blocks[question.block].intro}</p><div className="block-dots">{Object.keys(blocks).map(n=><i key={n} className={Number(n)<=question.block?"on":""}/>)}</div></aside><div className="question"><p className="qtype">{typeName(question.type)}</p><h1>{question.title}</h1>{blockStart&&<div className="block-intro"><b>Перед началом блока</b><p>{blocks[question.block].intro}</p></div>}<QuestionUI question={question} answer={answer} set={set}/><div className="actions"><button className="back" disabled={current===0} onClick={()=>setCurrent(v=>v-1)}>← Назад</button><button className="primary" disabled={!complete} onClick={next}>{current===39?"Показать ИИ Индекс":"Далее"}<span>→</span></button></div></div></section></main>;
-}
 
-function typeName(t:Question["type"]){return ({single:"ОДИН ВАРИАНТ",scale:"ШКАЛА 0–4",multi:"НЕСКОЛЬКО ВАРИАНТОВ",order:"РАССТАВЬТЕ ПО ПОРЯДКУ",match:"СОПОСТАВЛЕНИЕ",matrix:"МАТРИЦА",chart:"ИНТЕРПРЕТАЦИЯ ДАННЫХ"})[t]}
-function ResultCard({title,value,label,color}:{title:string,value:number,label:string,color:string}){return <article className={`score ${color}`}><span>{title}</span><div className="ring" style={{"--score":`${value*3.6}deg`} as React.CSSProperties}><strong>{value}</strong><small>/ 100</small></div><h3>{label}</h3><p>{value<50?"Сформируйте базовые практики и выберите 1–2 приоритетных сценария.":value<75?"Основа уже есть — переходите к системности, измерению эффекта и обмену опытом.":"Высокая зрелость — закрепляйте стандарты и масштабируйте лучшие практики."}</p></article>}
+  return (
+    <main>
+      <header className="topbar">
+        <a className="brand" href="#top" aria-label="Цифриум — на главную"><span>Цифриум</span><b>Корпоративное обучение</b></a>
+        <nav><a href="#assessment">ИИ Ассессмент</a><a href="#programs">Программы</a><a href="#process">Как проходит</a><a href="#request">Оставить заявку</a></nav>
+        <a className="top-cta" href="#request">Обсудить задачу <span>↗</span></a>
+      </header>
 
-function QuestionUI({question,answer,set}:{question:Question;answer:Answer|undefined;set:(a:Answer)=>void}){
- if(question.type==="single")return <div className="cards">{question.options?.map((o,i)=><button key={o.label} className={answer===o.score?"selected":""} onClick={()=>set(o.score??i)}><span>{String(i+1).padStart(2,"0")}</span><b>{o.label}</b><i>✓</i></button>)}</div>;
- if(question.type==="scale") {const n=typeof answer==="number"?answer:0;return <div className="scale"><div className="scale-value">{n}</div><input aria-label="Выберите значение" type="range" min="0" max="4" value={n} onChange={e=>set(Number(e.target.value))}/><div className="scale-labels"><span>{question.options?.[0].label}</span><b>{question.options?.[n].label}</b><span>{question.options?.[4].label}</span></div></div>}
- if(question.type==="multi"){const a=(answer as string[])||[];return <div className="chips">{question.options?.map(o=><button key={o.label} className={a.includes(o.label)?"selected":""} onClick={()=>{const has=a.includes(o.label); if(!has&&question.limit&&a.length>=question.limit)return; set(has?a.filter(x=>x!==o.label):[...a,o.label])}}><i>{a.includes(o.label)?"✓":"+"}</i>{o.label}</button>)}{question.limit&&<p>Выбрано: {a.length} из {question.limit}</p>}</div>}
- if(question.type==="order"){const a=(answer as string[])||question.items||[];function move(i:number,d:number){const b=[...a],j=i+d;if(j<0||j>=b.length)return;[b[i],b[j]]=[b[j],b[i]];set(b)}return <div className="order">{a.map((x,i)=><div key={x}><span>{i+1}</span><b>{x}</b><button onClick={()=>move(i,-1)} disabled={!i}>↑</button><button onClick={()=>move(i,1)} disabled={i===a.length-1}>↓</button></div>)}{answer===undefined&&<button className="order-start" onClick={()=>set(a)}>Подтвердить исходный порядок</button>}</div>}
- if(question.type==="match"){const a=(answer as Record<string,string>)||{};const rights=shuffle(question.pairs?.map(p=>p.right)||[]);return <div className="matching">{question.pairs?.map(p=><label key={p.left}><b>{p.left}</b><span>→</span><select value={a[p.left]||""} onChange={e=>set({...a,[p.left]:e.target.value})}><option value="">Выберите соответствие</option>{rights.map(r=><option key={r}>{r}</option>)}</select></label>)}</div>}
- if(question.type==="matrix"){const a=(answer as Record<string,number>)||{};const cols=["Не использую","Иногда","Регулярно","Системно"];return <div className="matrix-q"><div className="matrix-row head"><b>Задача</b>{cols.map(x=><span key={x}>{x}</span>)}</div>{question.items?.map(item=><div className="matrix-row" key={item}><b>{item}</b>{cols.map((x,i)=><label key={x}><input type="radio" name={item} checked={a[item]===i} onChange={()=>set({...a,[item]:i})}/><i/></label>)}</div>)}</div>}
- if(question.type==="chart")return <><div className="chart"><div><span>Использование</span><b style={{height:"88%"}}>+120%</b></div><div><span>Время процесса</span><b style={{height:"28%"}}>0%</b></div><div><span>Ошибки</span><b style={{height:"28%"}}>0%</b></div></div><div className="cards compact">{question.options?.map((o,i)=><button key={o.label} className={answer===o.score?"selected":""} onClick={()=>set(o.score??i)}><span>{i+1}</span><b>{o.label}</b><i>✓</i></button>)}</div></>;
- return null;
+      <section className="hero" id="top">
+        <div className="hero-copy">
+          <p className="kicker"><i /> Корпоративные программы · 2026</p>
+          <h1>Повышайте эффективность бизнеса<br/><em>с помощью ИИ</em></h1>
+          <p className="hero-lead">Диагностируем текущее состояние бизнеса, обучаем команды и меняем процессы. Доводим внедрение ИИ до измеримого бизнес-результата и отвечаем за его достижение.</p>
+          <div className="hero-actions"><a className="button dark" href="#assessment">Начать с диагностики <span>↓</span></a><a className="text-link" href="#programs">Выбрать программу <span>→</span></a></div>
+        </div>
+        <div className="hero-visual" aria-hidden="true">
+          <div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="core"><span>AI</span><small>WORK<br/>SKILLS</small></div>
+          <div className="float-card card-a"><b className="card-title">Полноценный<br/>ИИ Ассессмент</b></div>
+          <div className="float-card card-b"><b className="card-title">6 готовых траекторий<br/>развития команд</b></div>
+          <div className="float-card card-c"><b className="card-title">Измеримый результат<br/>для бизнеса</b></div>
+          <div className="spark s1">✦</div><div className="spark s2">✦</div>
+        </div>
+        <div className="hero-foot"><span>ИИ Ассессмент для всей организации</span><span>6 программ для конкретных задач</span><span>Решения на основе фактов и практики</span></div>
+      </section>
+
+      <section className="assessment section-pad" id="assessment">
+        <div className="assessment-intro">
+          <p className="kicker light"><i /> Если пока нет ясной картины</p>
+          <span className="assessment-tag">Отдельный продукт</span>
+          <h2>ИИ<br/><em>Ассессмент</em></h2>
+          <p className="assessment-lead">Комплексная диагностика способности компании получать измеримую пользу от ИИ и управлять связанными рисками.</p>
+          <button className="assessment-cta" onClick={()=>choose("ИИ Ассессмент — комплексная диагностика организации")}>Обсудить ассессмент <span>↗</span></button>
+        </div>
+        <div className="assessment-body">
+          <div className="assessment-question"><span>Главный результат</span><h3>Где мы находимся, куда двигаться и что сделать первым?</h3><p>Не формальный рейтинг зрелости, а доказательная картина текущего состояния и приоритизированная программа развития ИИ на 6–12 месяцев.</p></div>
+          <div className="assessment-sources"><span>Диагностика объединяет</span><ul><li>ИИ Чекап и практические задания сотрудников</li><li>Интервью с руководителями и владельцами процессов</li><li>Анализ процессов, ИИ-кейсов и внутренних документов</li><li>Верификацию выводов с рабочей группой</li></ul></div>
+          <div className="assessment-results"><article><b>01</b><span>ИИ Индекс и профиль зрелости</span></article><article><b>02</b><span>Карта разрывов и возможностей</span></article><article><b>03</b><span>Карта рисков</span></article><article><b>04</b><span>Дорожная карта на 6–12 месяцев</span></article></div>
+          <div className="assessment-meta"><span><b>7</b> направлений оценки</span><span><b>4–8</b> недель полного цикла</span><span><b>3</b> этапа реализации</span></div>
+        </div>
+      </section>
+
+      <section className="navigator section-pad">
+        <div className="section-head"><p className="kicker"><i /> Если задача уже понятна</p><h2>Выберите программу<br/>под конкретную цель</h2><p>Шесть практических маршрутов для сотрудников, руководителей и функциональных команд.</p></div>
+        <div className="path-list">{paths.map(([label, program, id], i)=><a href={`#${id}`} key={id}><span>{String(i+1).padStart(2,"0")}</span><b>{label}</b><em>{program}</em><i>↘</i></a>)}</div>
+      </section>
+
+      <section className="programs section-pad" id="programs">
+        <div className="section-head inverse"><p className="kicker"><i /> Каталог</p><h2>Шесть маршрутов<br/>к прикладному ИИ</h2><p>Каждая программа адаптируется под процессы, отрасль и уровень подготовки вашей команды.</p></div>
+        <div className="bundle-grid">
+          {bundles.map(bundle=><article className={`bundle ${bundle.accent}`} id={bundle.id} key={bundle.id}>
+            <div className="bundle-top"><span>{bundle.index}</span><small>{bundle.audience}</small></div>
+            <h3>{bundle.name}</h3><h4>{bundle.subtitle}</h4>
+            <p className="task">{bundle.task}</p>
+            <div className="result"><span>Результат</span><p>{bundle.result}</p></div>
+            <details><summary>Состав программы <span>+</span></summary><ul>{bundle.modules.map(module=><li key={module}>{module}</li>)}</ul></details>
+            <div className="experts"><span className="experts-label">Эксперты программы</span><div>{bundle.experts.map((expert, i)=><div className="expert" key={expert.name}><span className={`avatar avatar-${i}`}>{expert.initials}</span><p><b>{expert.name}</b><small>{expert.role}</small></p></div>)}</div></div>
+            <button className="bundle-cta" onClick={()=>choose(`${bundle.name} — ${bundle.subtitle}`)}>Обсудить программу <span>→</span></button>
+          </article>)}
+        </div>
+      </section>
+
+      <section className="process section-pad" id="process">
+        <div className="section-head"><p className="kicker"><i /> Подход</p><h2>От задачи —<br/>к рабочему решению</h2></div>
+        <div className="steps">{[
+          ["01","Диагностика","Определяем задачи команды и текущий уровень использования ИИ."],
+          ["02","Адаптация","Настраиваем программу и практику под материалы компании."],
+          ["03","Обучение","Участники осваивают инструменты на реальных рабочих кейсах."],
+          ["04","Внедрение","Фиксируем готовые сценарии и рекомендации по масштабированию."],
+        ].map(step=><article key={step[0]}><span>{step[0]}</span><h3>{step[1]}</h3><p>{step[2]}</p></article>)}</div>
+      </section>
+
+      <section className="outcomes section-pad">
+        <div><p className="kicker light"><i /> Для компании</p><h2>Не обзорные лекции.<br/><em>Конкретные изменения.</em></h2></div>
+        <ul><li>Готовые рабочие сценарии применения ИИ</li><li>Сокращение времени на регулярные операции</li><li>Повышение качества документов и коммуникаций</li><li>Возможность масштабировать обучение на подразделения</li></ul>
+      </section>
+
+      <section className="request section-pad" id="request">
+        <div className="request-copy"><p className="kicker"><i /> Следующий шаг</p><h2>Подберем программу<br/>под вашу компанию</h2><p>Расскажите о задаче и составе команды. Мы предложим формат обучения и подготовим программу.</p><div className="reply"><b>1 рабочий день</b><span>срок ответа<br/>на заявку</span></div></div>
+        {sent ? <div className="success"><span>✓</span><h3>Заявка принята</h3><p>Спасибо! Данные сохранены в текущей сессии. Для рабочего запуска форму можно подключить к CRM или корпоративной почте.</p><button onClick={()=>setSent(false)}>Отправить еще одну</button></div> :
+        <form onSubmit={submit}>
+          <label><span>Ваше имя *</span><input name="name" required placeholder="Как к вам обращаться" /></label>
+          <div className="form-row"><label><span>Компания *</span><input name="company" required placeholder="Название компании" /></label><label><span>Должность</span><input name="position" placeholder="Ваша роль" /></label></div>
+          <div className="form-row"><label><span>Телефон *</span><input name="phone" type="tel" required placeholder="+7 999 000-00-00" /></label><label><span>Корпоративная почта *</span><input name="email" type="email" required placeholder="name@company.ru" /></label></div>
+          <label><span>Интересующий продукт</span><select value={selected} onChange={e=>setSelected(e.target.value)}><option value="">Помогите подобрать</option><option>ИИ Ассессмент — комплексная диагностика организации</option>{bundles.map(b=><option key={b.id}>{b.name} — {b.subtitle}</option>)}</select></label>
+          <div className="form-row"><label><span>Количество участников</span><select><option>До 10</option><option>До 20</option><option>До 50</option><option>Более 50</option></select></label><label><span>Задача</span><input placeholder="Коротко о задаче" /></label></div>
+          <label className="agree"><input type="checkbox" required/><span>Согласен на обработку персональных данных</span></label>
+          <button className="submit" type="submit">Получить предложение <span>↗</span></button>
+        </form>}
+      </section>
+
+      <footer><div className="brand"><span>Цифриум</span><b>Корпоративное обучение</b></div><p>Практические программы развития AI-компетенций</p><a href="#top">Наверх ↑</a></footer>
+    </main>
+  );
 }
